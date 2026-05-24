@@ -138,6 +138,10 @@ int main(void)
 	auto prev_time = curr_time;
     std::chrono::nanoseconds curr_ns(0);
 
+    const float leftBound = -400.0f + obj.scale.x * 0.5f;
+    const float rightBound = 400.0f - obj.scale.x * 0.5f;
+
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -164,6 +168,15 @@ int main(void)
 
 			particle.update(timestep_sec);
             obj.position = particle.position;
+
+            if (obj.position.x <= leftBound) {
+                obj.position.x = leftBound;        
+				particle.velocity.x *= -1.0f;      //go to the right
+            }
+            else if (obj.position.x >= rightBound) {
+                obj.position.x = rightBound;       
+                particle.velocity.x *= -1.0f;      //go to the left
+            }
 		}
 
 		std::cout << "Normal Update" << std::endl;
