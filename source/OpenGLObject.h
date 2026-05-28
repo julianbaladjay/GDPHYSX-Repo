@@ -15,18 +15,25 @@ public:
     GLuint VAO, VBO, EBO;
     std::vector<GLuint> indices;
 
-    glm::vec3 position, scale, rotation;
+    glm::vec3 position, scale, rotation, color;
     float theta;
 
     glm::mat4 projection;
+
     OpenGLObject(tinyobj::attrib_t& attrib, tinyobj::shape_t& shape);
 
     void setOrthographic(float left, float right, float bottom, float top, float near, float far);
     void setPerspective(float fov, float aspect, float near, float far);
 
+    void setDefaults();
+
     glm::mat4 getTransform() const;
 
     void draw();
+
+    void setPosition(const glm::vec3& pos);
+
+    void setColor(const glm::vec3& col);
     void cleanup();
 };
 

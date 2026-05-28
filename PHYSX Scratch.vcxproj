@@ -137,11 +137,15 @@
   <ItemGroup>
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="source\RenderParticle.cpp" />
+    <ClCompile Include="source\PhysicsWorld.cpp" />
     <ClCompile Include="source\OpenGLShader.cpp" />
     <ClCompile Include="source\OpenGLObject.cpp" />
     <ClCompile Include="source\P6Particle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\RenderParticle.h" />
+    <ClInclude Include="source\PhysicsWorld.h" />
     <ClInclude Include="source\OpenGLShader.h" />
     <ClInclude Include="source\OpenGLObject.h" />
     <ClInclude Include="source\P6Particle.h" />

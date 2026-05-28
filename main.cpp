@@ -16,6 +16,7 @@
 #include "source/OpenGLObject.h"
 #include "source/OpenGLShader.h"
 #include "source/P6Particle.h"
+#include "source/RenderParticle.h"
 
 #include <chrono>
 #include <cmath>
@@ -121,6 +122,7 @@ int main(void)
     }
 
 	OpenGLObject obj(attributes, shapes[0]);
+    obj.setDefaults();
 
     obj.setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
     // or obj.setPerspective(60.0f, width/height, 0.1f, 100.0f);
@@ -128,10 +130,7 @@ int main(void)
 	P6::P6Particle particle = P6::P6Particle();
     particle.velocity = glm::vec3(100, 0, 0);
 
-    obj.position = particle.position;
-    obj.scale = glm::vec3(100.0f, 100.0f, 100.0f);
-    obj.rotation = glm::vec3(0.0f, 1.0f, 0.0f);
-    obj.theta = 0.0f;
+    RenderParticle renderParticle(&particle, &obj, glm::vec3(1.0f, 0.0f, 0.0f));
 
 	using clock = std::chrono::high_resolution_clock;
     auto curr_time = clock::now();
@@ -184,10 +183,13 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Set shader uniforms once per frame
         shader.setMat4("projection", glm::value_ptr(obj.projection));
         shader.setMat4("transform", glm::value_ptr(obj.getTransform()));
+        shader.setVec3("color", renderParticle.color);
 
-        obj.draw();
+        // Let RenderParticle sync position/color and draw
+        renderParticle.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

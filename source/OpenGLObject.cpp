@@ -50,6 +50,23 @@ void OpenGLObject::draw()
     glBindVertexArray(0);
 }
 
+void OpenGLObject::setPosition(const glm::vec3& pos) {
+    position = pos;
+}
+
+void OpenGLObject::setColor(const glm::vec3& col) {
+    // You’ll need a color field in OpenGLObject
+    color = col;
+}
+
+void OpenGLObject::setDefaults() {
+    position = glm::vec3(0.0f);
+    scale = glm::vec3(100.0f);
+    rotation = glm::vec3(0.0f, 1.0f, 0.0f);
+    theta = 0.0f;
+    color = glm::vec3(1.0f, 0.0f, 0.0f); // default red
+}
+
 void OpenGLObject::cleanup() 
 {
     glDeleteVertexArrays(1, &VAO);
