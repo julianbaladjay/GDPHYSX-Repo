@@ -1,5 +1,7 @@
 #include "OpenGLObject.h"
 #include "tiny_obj_loader.h"
+#include "OpenGLShader.h"
+#include <glm/gtc/type_ptr.hpp>
 
 OpenGLObject::OpenGLObject(tinyobj::attrib_t& attrib, tinyobj::shape_t& shape) 
 {
@@ -43,8 +45,13 @@ glm::mat4 OpenGLObject::getTransform() const {
     return transform;
 }
 
-void OpenGLObject::draw() 
+void OpenGLObject::draw(OpenGLShader& shader, const glm::vec3& color)
 {
+    shader.use();
+    shader.setMat4("projection", glm::value_ptr(projection));
+    shader.setMat4("transform", glm::value_ptr(getTransform()));
+    shader.setVec3("color", color);
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -55,7 +62,6 @@ void OpenGLObject::setPosition(const glm::vec3& pos) {
 }
 
 void OpenGLObject::setColor(const glm::vec3& col) {
-    // You’ll need a color field in OpenGLObject
     color = col;
 }
 

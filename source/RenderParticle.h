@@ -1,8 +1,8 @@
 #pragma once
 #include "P6Particle.h"
 #include "OpenGLObject.h"
-#include <glm/glm.hpp>
 
+class OpenGLShader;
 
 class RenderParticle
 {
@@ -19,6 +19,6 @@ public:
 	//constructor in case we want to specify color
 	RenderParticle(P6::P6Particle* p, OpenGLObject* obj, glm::vec3 c) : physicsParticle(p), RenderObject(obj), color(c) {}		
 
-	void draw();
+	void draw(OpenGLShader& shader);
 };
 

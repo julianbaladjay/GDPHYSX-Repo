@@ -23,52 +23,6 @@
 
 using namespace std::chrono_literals;
 
-//x position of model
-float x_mod = 0;
-
-//y position of model
-float y_mod = 0;
-
-//z position of model
-float z_mod = 0;
-
-void Key_Callback(GLFWwindow* window, //pointer to window
-	                int key, // key pressed
-	                int scancode, //physical key code
-                    int action, //press or release
-	                int mods) //which modifier keys are pressed
-{
-	//user presses escape key
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        //quit program
-		glfwSetWindowShouldClose(window, true);
-	}
-
-    //when user presses D
-	if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-		//move model right
-		x_mod += 0.1f;
-	}
-
-	//when user presses A
-	if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-		//move model left
-		x_mod -= 0.1f;
-	}
-
-	//when user presses W
-	if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-		//move model up
-		y_mod += 0.1f;
-	}
-
-	//when user presses S
-	if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-		//move model down
-		y_mod -= 0.1f;
-	}
-}
-
 int main(void)
 {
 	//frame 1 -> frame 2 takes 16ms
@@ -97,9 +51,6 @@ int main(void)
 	gladLoadGL();
     
     glViewport(0, 0, width, height);
-
-	//set key callback function
-	glfwSetKeyCallback(window, Key_Callback);
 
     //use shaders
     OpenGLShader shader("Shaders/sample.vert", "Shaders/sample.frag");
@@ -130,7 +81,9 @@ int main(void)
 	P6::P6Particle particle = P6::P6Particle();
     particle.velocity = glm::vec3(100, 0, 0);
 
-    RenderParticle renderParticle(&particle, &obj, glm::vec3(1.0f, 0.0f, 0.0f));
+    std::list<RenderParticle*> renderParticles;
+	RenderParticle rp1 = RenderParticle(&particle, &obj, glm::vec3(1.0f, 0.0f, 0.0f));
+	renderParticles.push_back(&rp1);
 
 	using clock = std::chrono::high_resolution_clock;
     auto curr_time = clock::now();
@@ -183,13 +136,13 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Set shader uniforms once per frame
-        shader.setMat4("projection", glm::value_ptr(obj.projection));
-        shader.setMat4("transform", glm::value_ptr(obj.getTransform()));
-        shader.setVec3("color", renderParticle.color);
+		for (std::list<RenderParticle*>::iterator i = renderParticles.begin(); i != renderParticles.end(); i++) 
+        {
+			(*i)->draw(shader);
+		}
 
         // Let RenderParticle sync position/color and draw
-        renderParticle.draw();
+        //renderParticle.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

@@ -9,6 +9,8 @@ namespace tinyobj {
     struct shape_t;
 }
 
+class OpenGLShader;
+
 class OpenGLObject
 {
 public:
@@ -29,7 +31,7 @@ public:
 
     glm::mat4 getTransform() const;
 
-    void draw();
+    void draw(OpenGLShader& shader, const glm::vec3& color);
 
     void setPosition(const glm::vec3& pos);
 
