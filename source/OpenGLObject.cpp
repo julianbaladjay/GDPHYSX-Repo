@@ -2,6 +2,7 @@
 #include "tiny_obj_loader.h"
 #include "OpenGLShader.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 OpenGLObject::OpenGLObject(tinyobj::attrib_t& attrib, tinyobj::shape_t& shape) 
 {
@@ -55,6 +56,7 @@ void OpenGLObject::draw(OpenGLShader& shader, const glm::vec3& color)
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+
 }
 
 void OpenGLObject::setPosition(const glm::vec3& pos) {

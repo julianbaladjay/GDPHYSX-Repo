@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -137,7 +137,7 @@
   <ItemGroup>
     <ClCompile Include="glad.c" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="source\RaceResults.cpp" />
+    <ClCompile Include="source\PC01Result.cpp" />
     <ClCompile Include="source\RenderParticle.cpp" />
     <ClCompile Include="source\PhysicsWorld.cpp" />
     <ClCompile Include="source\OpenGLShader.cpp" />
@@ -145,7 +145,7 @@
     <ClCompile Include="source\P6Particle.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\RaceResults.h" />
+    <ClInclude Include="source\PC01Result.h" />
     <ClInclude Include="source\RenderParticle.h" />
     <ClInclude Include="source\PhysicsWorld.h" />
     <ClInclude Include="source\OpenGLShader.h" />

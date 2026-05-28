@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "P6Particle.h"
 #include "OpenGLObject.h"
 
@@ -10,6 +11,8 @@ public:
 	P6::P6Particle* physicsParticle;
 	OpenGLObject* RenderObject;
 	glm::vec3 color;
+	std::string name;
+	bool finished = false;
 
 	RenderParticle(P6::P6Particle* p, OpenGLObject* obj) : physicsParticle(p), RenderObject(obj) 
 	{
@@ -17,7 +20,8 @@ public:
 	}
 
 	//constructor in case we want to specify color
-	RenderParticle(P6::P6Particle* p, OpenGLObject* obj, glm::vec3 c) : physicsParticle(p), RenderObject(obj), color(c) {}		
+	RenderParticle(P6::P6Particle* p, OpenGLObject* obj, glm::vec3 c, const std::string& n)
+		: physicsParticle(p), RenderObject(obj), color(c), name(n) {}
 
 	void draw(OpenGLShader& shader);
 };

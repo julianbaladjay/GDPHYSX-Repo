@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -17,11 +18,19 @@
 #include "source/OpenGLShader.h"
 #include "source/P6Particle.h"
 #include "source/RenderParticle.h"
+#include "source/RaceResults.h"
 
 #include <chrono>
 #include <cmath>
 
 using namespace std::chrono_literals;
+
+struct ParticleInfo {
+    RenderParticle* rp;
+    std::string name;
+    bool finished = false;
+};
+
 
 int main(void)
 {
@@ -34,11 +43,11 @@ int main(void)
     if (!glfwInit())
         return -1;
 
-	float width = 1000.0f;
-	float height = 1000.0f;
+	float width = 700.0f;
+	float height = 700.0f;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(width, height, "Julian Baladjay", NULL, NULL);
+    window = glfwCreateWindow(width, height, "PC01 Julian Baladjay", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -72,6 +81,8 @@ int main(void)
         return -1;
     }
 
+   
+
 	OpenGLObject obj(attributes, shapes[0]);
     obj.setDefaults();
 
@@ -79,20 +90,72 @@ int main(void)
     // or obj.setPerspective(60.0f, width/height, 0.1f, 100.0f);
 
 	P6::P6Particle particle = P6::P6Particle();
-    particle.velocity = glm::vec3(100, 0, 0);
 
     std::list<RenderParticle*> renderParticles;
-	RenderParticle rp1 = RenderParticle(&particle, &obj, glm::vec3(1.0f, 0.0f, 0.0f));
-	renderParticles.push_back(&rp1);
 
+    //red sphere
+    auto* redParticle = new P6::P6Particle();
+    redParticle->position = glm::vec3(-350.0f, 350.0f, 201.0f); // top-left corner
+    redParticle->velocity = glm::vec3(80.0f, -80.0f, 0.0f);     // toward center
+    redParticle->acceleration = glm::vec3(14.5f, 14.5f, 0.0f);      // constant accel
+
+    auto* redObj = new OpenGLObject(attributes, shapes[0]);
+    redObj->setDefaults();
+    redObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
+	redObj->scale = glm::vec3(10.0f);
+
+    auto* rpRed = new RenderParticle(redParticle, redObj, glm::vec3(1.0f, 0.0f, 0.0f), "Red");
+    renderParticles.push_back(rpRed);
+
+    //green sphere
+    auto* greenParticle = new P6::P6Particle();
+    greenParticle->position = glm::vec3(350.0f, 350.0f, 173.0f);
+    greenParticle->velocity = glm::vec3(-90.0f, -90.0f, 0.0f);
+    greenParticle->acceleration = glm::vec3(-8.0f, 8.0f, 0.0f);
+
+    auto* greenObj = new OpenGLObject(attributes, shapes[0]);
+    greenObj->setDefaults();
+    greenObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
+    greenObj->scale = glm::vec3(10.0f);
+
+    auto* rpGreen = new RenderParticle(greenParticle, greenObj, glm::vec3(0.0f, 1.0f, 0.0f), "Green");
+    renderParticles.push_back(rpGreen);
+
+    //blue sphere
+    auto* blueParticle = new P6::P6Particle();
+    blueParticle->position = glm::vec3(350.0f, -350.0f, -300.0f);
+    blueParticle->velocity = glm::vec3(-130.0f, 130.0f, 0.0f);
+    blueParticle->acceleration = glm::vec3(-1.0f, -1.0f, 0.0f);
+
+    auto* blueObj = new OpenGLObject(attributes, shapes[0]);
+    blueObj->setDefaults();
+    blueObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
+    blueObj->scale = glm::vec3(10.0f);
+
+    auto* rpBlue = new RenderParticle(blueParticle, blueObj, glm::vec3(0.0f, 0.0f, 1.0f), "Blue");
+    renderParticles.push_back(rpBlue);
+
+    //yellow sphere
+    auto* yellowParticle = new P6::P6Particle();
+    yellowParticle->position = glm::vec3(-350.0f, -350.0f, -150.0f);
+    yellowParticle->velocity = glm::vec3(110.0f, 110.0f, 0.0f);
+    yellowParticle->acceleration = glm::vec3(3.0f, -3.0f, 0.0f);
+
+    auto* yellowObj = new OpenGLObject(attributes, shapes[0]);
+    yellowObj->setDefaults();
+    yellowObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
+    yellowObj->scale = glm::vec3(10.0f);
+
+    auto* rpYellow = new RenderParticle(yellowParticle, yellowObj, glm::vec3(1.0f, 1.0f, 0.0f), "Yellow");
+    renderParticles.push_back(rpYellow);
+
+    std::vector<RaceResults> results;
+    
 	using clock = std::chrono::high_resolution_clock;
-    auto curr_time = clock::now();
-	auto prev_time = curr_time;
+    auto start_time = clock::now();
+    auto curr_time = start_time;
+    auto prev_time = curr_time;
     std::chrono::nanoseconds curr_ns(0);
-
-    const float leftBound = -400.0f + obj.scale.x * 0.5f;
-    const float rightBound = 400.0f - obj.scale.x * 0.5f;
-
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -116,37 +179,63 @@ int main(void)
             constexpr float timestep_sec = timestep.count() / (float)(1E09); //1 with 9 zeroes
             curr_ns -= timestep;
 
-            std::cout << "P6 Update" << std::endl;
+            for (auto& rp : renderParticles) {
+                if (rp->finished) {
+                    // Already done, just keep it at center
+                    rp->RenderObject->setPosition(rp->physicsParticle->position);
+                    continue;
+                }
 
-			particle.update(timestep_sec);
-            obj.position = particle.position;
+                glm::vec3 toCenter = glm::vec3(0.0f) - rp->physicsParticle->position;
+                glm::vec3 dir = glm::normalize(toCenter);
 
-            if (obj.position.x <= leftBound) {
-                obj.position.x = leftBound;        
-				particle.velocity.x *= -1.0f;      //go to the right
+                float accelMag = glm::length(rp->physicsParticle->acceleration);
+                rp->physicsParticle->acceleration = dir * accelMag;
+
+                rp->physicsParticle->update(timestep_sec);
+
+                if (glm::length(toCenter) <= 1.0f ||
+                    glm::dot(rp->physicsParticle->velocity, toCenter) <= 0.0f)
+                {
+                    float magVel = glm::length(rp->physicsParticle->velocity);
+                    float elapsed = std::chrono::duration<float>(curr_time - start_time).count();
+                    glm::vec3 displacement = glm::vec3(0.0f) - rp->physicsParticle->position;
+                    glm::vec3 avgVel = displacement / elapsed;
+
+                    results.push_back(RaceResults(rp->name, magVel, avgVel, elapsed));
+
+                    rp->physicsParticle->position = glm::vec3(0.0f);
+                    rp->physicsParticle->velocity = glm::vec3(0.0f);
+                    rp->physicsParticle->acceleration = glm::vec3(0.0f);
+
+                    rp->finished = true;
+                }
+
+                rp->RenderObject->setPosition(rp->physicsParticle->position);
             }
-            else if (obj.position.x >= rightBound) {
-                obj.position.x = rightBound;       
-                particle.velocity.x *= -1.0f;      //go to the left
-            }
+
 		}
 
-		std::cout << "Normal Update" << std::endl;
 
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		for (std::list<RenderParticle*>::iterator i = renderParticles.begin(); i != renderParticles.end(); i++) 
-        {
-			(*i)->draw(shader);
-		}
-
-        // Let RenderParticle sync position/color and draw
-        //renderParticle.draw();
+        for (auto& rp : renderParticles) {
+            rp->draw(shader);
+        }
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
+    }
+
+    std::sort(results.begin(), results.end(),
+        [](const RaceResults& a, const RaceResults& b) { return a.getTime() < b.getTime(); });
+
+    std::cout << "\n--- Race Results ---\n";
+    int rank = 1;
+    for (const auto& r : results) {
+        r.display(rank++);
     }
 
     obj.cleanup();
