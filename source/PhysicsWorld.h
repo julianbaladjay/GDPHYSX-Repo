@@ -7,7 +7,7 @@ namespace P6 {
 	{
 	public:
 		//holds all particles
-		std::list<P6Particle> particles;
+		std::list<P6Particle*> particles;
 
 		//add particles
 		void AddParticle(P6Particle* toadd);
