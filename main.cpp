@@ -42,8 +42,8 @@ int main(void)
     if (!glfwInit())
         return -1;
 
-	float width = 700.0f;
-	float height = 700.0f;
+	float width = 800.0f;
+	float height = 800.0f;
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(width, height, "PC01 Julian Baladjay", NULL, NULL);
@@ -94,48 +94,57 @@ int main(void)
 
 	P6::PhysicsWorld pWorld = P6::PhysicsWorld();
 
+	auto velocity = particle.velocity = glm::vec3(100.0f, 0.0f, 0.0f);
+
+	auto acceleration = particle.acceleration = glm::vec3(10.0f, 0.0f, 0.0f);
+
+	auto scale = obj.scale = glm::vec3(20.0f);
+
     //red sphere
-    auto* redParticle = new P6::P6Particle();
-    redParticle->position = glm::vec3(0.0f, 350.0f, 0.0f); // top-left corner
-    redParticle->velocity = glm::vec3(0.0f, 0.0f, 0.0f);     // toward center
-    redParticle->acceleration = glm::vec3(0.0f, 0.0f, 0.0f);       // constant accel
+	auto* redParticle = new P6::P6Particle();
+    redParticle->position = glm::vec3(-350.0f, 350.0f, 0.0f);
+    redParticle->velocity = velocity;
+    redParticle->acceleration = acceleration;
 
     auto* redObj = new OpenGLObject(attributes, shapes[0]);
     redObj->setDefaults();
     redObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
-	redObj->scale = glm::vec3(10.0f);
+	redObj->scale = scale;
 
     auto* rpRed = new RenderParticle(redParticle, redObj, glm::vec3(1.0f, 0.0f, 0.0f), "Red");
     renderParticles.push_back(rpRed);
+	pWorld.AddParticle(redParticle);
 
     //green sphere
     auto* greenParticle = new P6::P6Particle();
-    greenParticle->position = glm::vec3(0.0f, 0.0f, 0.0f);
-    greenParticle->velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-    greenParticle->acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+    greenParticle->position = glm::vec3(-350.0f, 0.0f, 0.0f);
+	greenParticle->velocity = velocity;
+    greenParticle->acceleration = acceleration;
 
     auto* greenObj = new OpenGLObject(attributes, shapes[0]);
     greenObj->setDefaults();
     greenObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
-    greenObj->scale = glm::vec3(10.0f);
+    greenObj->scale = scale;
 
     auto* rpGreen = new RenderParticle(greenParticle, greenObj, glm::vec3(0.0f, 1.0f, 0.0f), "Green");
     renderParticles.push_back(rpGreen);
+    pWorld.AddParticle(greenParticle);
 
     //blue sphere
     auto* blueParticle = new P6::P6Particle();
-    blueParticle->position = glm::vec3(0.0f, -350.0f, 0.0f);
-    blueParticle->velocity = glm::vec3(0.0f, 0.0f, 0.0f);
-    blueParticle->acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+    blueParticle->position = glm::vec3(-350.0f, -350.0f, 0.0f);
+    blueParticle->velocity = velocity;
+    blueParticle->acceleration = acceleration;
 
     auto* blueObj = new OpenGLObject(attributes, shapes[0]);
     blueObj->setDefaults();
     blueObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
-    blueObj->scale = glm::vec3(10.0f);
+    blueObj->scale = scale;
 
     auto* rpBlue = new RenderParticle(blueParticle, blueObj, glm::vec3(0.0f, 0.0f, 1.0f), "Blue");
     renderParticles.push_back(rpBlue);
-    
+    pWorld.AddParticle(blueParticle);
+
 	using clock = std::chrono::high_resolution_clock;
     auto start_time = clock::now();
     auto curr_time = start_time;
@@ -160,25 +169,14 @@ int main(void)
         {
             constexpr float timestep_sec = timestep.count() / (float)(1E09);
             curr_ns -= timestep;
-
+            // Physics update via PhysicsWorld
+            std::cout << "P6 Update" << std::endl;
+            pWorld.Update(timestep_sec);
+            if (redParticle->position.x > 0.0f) {
+				redParticle->Destroy();
+				std::cout << "Red particle destroyed\n";
+            }
             for (auto& rp : renderParticles) {
-                glm::vec3 toCenter = glm::vec3(0.0f) - rp->physicsParticle->position;
-                glm::vec3 dir = glm::normalize(toCenter);
-
-                float accelMag = glm::length(rp->physicsParticle->acceleration);
-                rp->physicsParticle->acceleration = dir * accelMag;
-
-                rp->physicsParticle->update(timestep_sec);
-
-                // optional: stop condition if you still want them to freeze at center
-                if (glm::length(toCenter) <= 1.0f ||
-                    glm::dot(rp->physicsParticle->velocity, toCenter) <= 0.0f)
-                {
-                    rp->physicsParticle->position = glm::vec3(0.0f);
-                    rp->physicsParticle->velocity = glm::vec3(0.0f);
-                    rp->physicsParticle->acceleration = glm::vec3(0.0f);
-                }
-
                 rp->RenderObject->setPosition(rp->physicsParticle->position);
             }
         }

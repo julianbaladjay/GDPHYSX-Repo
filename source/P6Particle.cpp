@@ -23,6 +23,11 @@ namespace P6 {
 		this->velocity = glm::vec3(0, 0, 0);
 		this->acceleration = glm::vec3(0, 0, 0  );
     }
+
+	void P6Particle::Destroy()
+	{
+		isDestroyed = true;
+	}
 }
 
 

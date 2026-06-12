@@ -12,7 +12,6 @@ public:
 	OpenGLObject* RenderObject;
 	glm::vec3 color;
 	std::string name;
-	bool finished = false;
 
 	RenderParticle(P6::P6Particle* p, OpenGLObject* obj) : physicsParticle(p), RenderObject(obj) 
 	{

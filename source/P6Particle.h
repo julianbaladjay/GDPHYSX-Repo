@@ -10,12 +10,20 @@ namespace P6 {
 		protected:
 			void updatePosition(float deltaTime);
 			void updateVelocity(float deltaTime);
+			//flag to hold when to destroy particle
+			bool isDestroyed = false;
 		public:
 			glm::vec3 position;
 			glm::vec3 velocity;
 			glm::vec3 acceleration;
 
 			void update(float deltaTime);
+
+			void Destroy();
+
+			bool IsDestroyed() { 
+				return isDestroyed; 
+			}
 
 			P6Particle();
 	};

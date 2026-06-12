@@ -11,6 +11,9 @@ namespace P6 {
 
 	void PhysicsWorld::Update(float time)
 	{
+		//update list before calling
+		// updates for particles
+		UpdateParticleList();
 		//iterator that points at the start of the list
 		for (std::list<P6Particle*>::iterator p = particles.begin(); 
 			//continue looping until the end of list
@@ -25,7 +28,14 @@ namespace P6 {
 
 	void PhysicsWorld::UpdateParticleList()
 	{
-		// Implementation for updating the particle list
+		///removes all particles from list
+		//return true to fucntion below
+		particles.remove_if(
+			[](P6Particle* p)
+			{
+				return p->IsDestroyed();
+			}
+		);
 	}
 
 }
