@@ -31,6 +31,10 @@ struct ParticleInfo {
     bool finished = false;
 };
 
+float yaw = 0.0f; // left/right rotation around Z
+float pitch = 0.3f; // up/down tilt
+float cameraDistance = 600.0f;
+
 int main(void)
 {
 	//frame 1 -> frame 2 takes 16ms
@@ -46,7 +50,7 @@ int main(void)
 	float height = 800.0f;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(width, height, "PC01 Julian Baladjay", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Group1/Yay P6", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -80,8 +84,6 @@ int main(void)
         return -1;
     }
 
-   
-
 	OpenGLObject obj(attributes, shapes[0]);
     obj.setDefaults();
 
@@ -100,95 +102,124 @@ int main(void)
 
 	auto scale = obj.scale = glm::vec3(20.0f);
 
-    //red sphere
-	auto* redParticle = new P6::P6Particle();
-    redParticle->position = glm::vec3(-350.0f, 350.0f, 0.0f);
-    redParticle->velocity = velocity;
-    redParticle->acceleration = acceleration;
-
-    auto* redObj = new OpenGLObject(attributes, shapes[0]);
-    redObj->setDefaults();
-    redObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
-	redObj->scale = scale;
-
-    auto* rpRed = new RenderParticle(redParticle, redObj, glm::vec3(1.0f, 0.0f, 0.0f), "Red");
-    renderParticles.push_back(rpRed);
-	pWorld.AddParticle(redParticle);
-
-    //green sphere
-    auto* greenParticle = new P6::P6Particle();
-    greenParticle->position = glm::vec3(-350.0f, 0.0f, 0.0f);
-	greenParticle->velocity = velocity;
-    greenParticle->acceleration = acceleration;
-
-    auto* greenObj = new OpenGLObject(attributes, shapes[0]);
-    greenObj->setDefaults();
-    greenObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
-    greenObj->scale = scale;
-
-    auto* rpGreen = new RenderParticle(greenParticle, greenObj, glm::vec3(0.0f, 1.0f, 0.0f), "Green");
-    renderParticles.push_back(rpGreen);
-    pWorld.AddParticle(greenParticle);
-
-    //blue sphere
-    auto* blueParticle = new P6::P6Particle();
-    blueParticle->position = glm::vec3(-350.0f, -350.0f, 0.0f);
-    blueParticle->velocity = velocity;
-    blueParticle->acceleration = acceleration;
-
-    auto* blueObj = new OpenGLObject(attributes, shapes[0]);
-    blueObj->setDefaults();
-    blueObj->setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
-    blueObj->scale = scale;
-
-    auto* rpBlue = new RenderParticle(blueParticle, blueObj, glm::vec3(0.0f, 0.0f, 1.0f), "Blue");
-    renderParticles.push_back(rpBlue);
-    pWorld.AddParticle(blueParticle);
-
 	using clock = std::chrono::high_resolution_clock;
     auto start_time = clock::now();
     auto curr_time = start_time;
     auto prev_time = curr_time;
     std::chrono::nanoseconds curr_ns(0);
 
+    // Setup
+    int sparks;
+    std::cout << "Enter number of sparks: ";
+    std::cin >> sparks;
+
+    bool paused = false;
+    bool usePerspective = true; // start in perspective
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Poll for and process events */
         glfwPollEvents();
 
-        glEnable(GL_DEPTH_TEST);
+        // Toggle play/pause
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            paused = !paused;
+        }
 
-        // get current time
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) usePerspective = false;
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) usePerspective = true;
+
+        // Camera rotation (WASD)
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) yaw -= 0.02f;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) yaw += 0.02f;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) pitch += 0.02f;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) pitch -= 0.02f;
+
+        // Timing
         curr_time = clock::now();
         auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - prev_time);
         prev_time = curr_time;
-
         curr_ns += dur;
-        if (curr_ns >= timestep)
-        {
+
+        if (curr_ns >= timestep) {
             constexpr float timestep_sec = timestep.count() / (float)(1E09);
             curr_ns -= timestep;
-            // Physics update via PhysicsWorld
-            std::cout << "P6 Update" << std::endl;
-            pWorld.Update(timestep_sec);
-            if (redParticle->position.x > 0.0f) {
-				redParticle->Destroy();
-				std::cout << "Red particle destroyed\n";
-            }
-            for (auto& rp : renderParticles) {
-                rp->RenderObject->setPosition(rp->physicsParticle->position);
+
+            if (!paused) {
+                // Spawn continuously
+                int spawnRate = 5; // sparks per frame
+                for (int i = 0; i < spawnRate && (int)renderParticles.size() < sparks; ++i) {
+                    auto* p = new P6::P6Particle();
+                    pWorld.AddParticle(p);
+
+                    auto* obj = new OpenGLObject(attributes, shapes[0]);
+                    obj->setDefaults();
+                    if (usePerspective) {
+                        obj->setPerspective(60.0f, 1.0f, 0.1f, 1000.0f);
+                    }
+                    else {
+                        obj->setOrthographic(-400, 400, -400, 400, -400, 400);
+                    }
+
+                    auto* rp = new RenderParticle(p, obj);
+                    renderParticles.push_back(rp);
+                }
+
+                // Physics update
+                pWorld.Update(timestep_sec);
+
+                // Cleanup dead particles
+                for (auto it = renderParticles.begin(); it != renderParticles.end();) {
+                    if ((*it)->physicsParticle->IsDestroyed()) {
+                        delete (*it)->physicsParticle;
+                        delete (*it)->RenderObject;
+                        delete* it;
+                        it = renderParticles.erase(it);
+                    }
+                    else {
+                        ++it;
+                    }
+                }
             }
         }
 
-        /* Render here */
+
+        glm::vec3 pivot = glm::vec3(0.0f, -400.0f, 0.0f); // fountain base
+
+        // Compute camera position from angles
+        glm::vec3 cameraPos = pivot + glm::vec3(
+            cameraDistance * cos(pitch) * cos(yaw),
+            cameraDistance * sin(pitch),
+            cameraDistance * cos(pitch) * sin(yaw)
+        );
+
+        // Build view matrix
+        glm::mat4 view = glm::lookAt(
+            cameraPos,
+            pivot, // look at fountain center
+            glm::vec3(0.0f, 1.0f, 0.0f)  // up vector
+        );
+
+        glm::mat4 projection;
+        if (usePerspective) {
+            projection = glm::perspective(glm::radians(60.0f), 1.0f, 0.1f, 1000.0f);
+        }
+        else {
+            projection = glm::ortho(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
+        }
+
+        shader.use();
+        shader.setMat4("view", glm::value_ptr(view));
+
+        shader.setMat4("projection", glm::value_ptr(projection));
+
+        // Render
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for (auto& rp : renderParticles) {
             rp->draw(shader);
         }
 
-        /* Swap front and back buffers */
         glfwSwapBuffers(window);
     }
 
