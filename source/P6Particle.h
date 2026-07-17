@@ -5,27 +5,26 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace P6 {
-	class P6Particle
-	{
-		protected:
-			void updatePosition(float deltaTime);
-			void updateVelocity(float deltaTime);
-			//flag to hold when to destroy particle
-			bool isDestroyed = false;
-		public:
-			glm::vec3 position;
-			glm::vec3 velocity;
-			glm::vec3 acceleration;
-			float lifespan;
+    class P6Particle {
+    public:
+        glm::vec3 position;
+        glm::vec3 velocity;
+        glm::vec3 acceleration;
+        glm::vec3 forceAccum;
 
-			void update(float deltaTime);
+        float mass;
+        float damping;
+        float radius;
+        float restitution;
+        bool isDestroyed = false;
 
-			void Destroy();
+        void addForce(const glm::vec3& f);
+        void clearForces();
+        void integrate(float dt);
 
-			bool IsDestroyed() { 
-				return isDestroyed; 
-			}
+        void Destroy();
+        bool IsDestroyed() { return isDestroyed; }
 
-			P6Particle();
-	};
-} // namespace P6
+        P6Particle();
+    };
+}
