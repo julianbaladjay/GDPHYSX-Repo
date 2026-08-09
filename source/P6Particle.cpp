@@ -17,6 +17,12 @@ namespace P6 {
 		this->updateVelocity(time);
     }
 
+    //Set the flag for the destroy variable
+    void P6Particle::Destroy()
+    {
+        this->isDestroyed = true;
+    }
+
     P6Particle::P6Particle()
     {
 		this->position = glm::vec3(0, 0, 0);

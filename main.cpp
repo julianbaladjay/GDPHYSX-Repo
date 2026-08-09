@@ -17,6 +17,7 @@
 #include "source/OpenGLShader.h"
 #include "source/P6Particle.h"
 #include "source/RenderParticle.h"
+#include "source/PhysicsWorld.h"
 
 #include <chrono>
 #include <cmath>
@@ -127,18 +128,37 @@ int main(void)
     obj.setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
     // or obj.setPerspective(60.0f, width/height, 0.1f, 100.0f);
 
+    // Second render object, reusing the same loaded mesh data
+    OpenGLObject obj2(attributes, shapes[0]);
+    obj2.setDefaults();
+    obj2.setOrthographic(-400.0f, 400.0f, -400.0f, 400.0f, -400.0f, 400.0f);
+
+    const float leftBound = -400.0f + obj.scale.x * 0.5f;
+    const float rightBound = 400.0f - obj.scale.x * 0.5f;
+
+    // Start both particles at the left edge, like the slides' p1/p2 demo,
+    // so you can actually see them travel before p1 gets destroyed at the center
 	P6::P6Particle particle = P6::P6Particle();
+    particle.position = glm::vec3(leftBound, 200, 0);
     particle.velocity = glm::vec3(100, 0, 0);
 
+    P6::P6Particle particle2 = P6::P6Particle();
+    particle2.position = glm::vec3(leftBound, 0, 0);
+    particle2.velocity = glm::vec3(100, 0, 0);
+
     RenderParticle renderParticle(&particle, &obj, glm::vec3(1.0f, 0.0f, 0.0f));
+    RenderParticle renderParticle2(&particle2, &obj2, glm::vec3(0.0f, 0.4f, 1.0f));
+
+    // Create our Physics World and register both particles with it
+    // instead of updating each particle by hand
+    P6::PhysicsWorld pWorld = P6::PhysicsWorld();
+    pWorld.AddParticle(&particle);
+    pWorld.AddParticle(&particle2);
 
 	using clock = std::chrono::high_resolution_clock;
     auto curr_time = clock::now();
 	auto prev_time = curr_time;
     std::chrono::nanoseconds curr_ns(0);
-
-    const float leftBound = -400.0f + obj.scale.x * 0.5f;
-    const float rightBound = 400.0f - obj.scale.x * 0.5f;
 
 
     /* Loop until the user closes the window */
@@ -165,8 +185,13 @@ int main(void)
 
             std::cout << "P6 Update" << std::endl;
 
-			particle.update(timestep_sec);
+            //Update the physics world -- this updates every particle
+            //registered with it (and clears out any destroyed ones)
+            //instead of us calling particle.update() by hand for each one
+            pWorld.Update(timestep_sec);
+
             obj.position = particle.position;
+            obj2.position = particle2.position;
 
             if (obj.position.x <= leftBound) {
                 obj.position.x = leftBound;        
@@ -176,6 +201,21 @@ int main(void)
                 obj.position.x = rightBound;       
                 particle.velocity.x *= -1.0f;      //go to the left
             }
+
+            if (obj2.position.x <= leftBound) {
+                obj2.position.x = leftBound;
+                particle2.velocity.x *= -1.0f;
+            }
+            else if (obj2.position.x >= rightBound) {
+                obj2.position.x = rightBound;
+                particle2.velocity.x *= -1.0f;
+            }
+
+            //When particle 1 reaches the center, destroy it
+            //(it will stop updating and stop rendering)
+            if (!particle.IsDestroyed() && std::abs(obj.position.x) < 1.0f) {
+                particle.Destroy();
+            }
 		}
 
 		std::cout << "Normal Update" << std::endl;
@@ -183,13 +223,17 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Set shader uniforms once per frame
+        // Draw particle 1 (skips itself once destroyed)
         shader.setMat4("projection", glm::value_ptr(obj.projection));
         shader.setMat4("transform", glm::value_ptr(obj.getTransform()));
         shader.setVec3("color", renderParticle.color);
-
-        // Let RenderParticle sync position/color and draw
         renderParticle.draw();
+
+        // Draw particle 2
+        shader.setMat4("projection", glm::value_ptr(obj2.projection));
+        shader.setMat4("transform", glm::value_ptr(obj2.getTransform()));
+        shader.setVec3("color", renderParticle2.color);
+        renderParticle2.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -197,6 +241,7 @@ int main(void)
     }
 
     obj.cleanup();
+    obj2.cleanup();
 
     glfwTerminate();
     return 0;
